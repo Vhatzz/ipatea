@@ -229,11 +229,13 @@ create policy "Admin manage products" on products for all using (is_admin()) wit
 drop policy if exists "Public create orders" on orders;
 drop policy if exists "Public read orders by code" on orders;
 drop policy if exists "Admin read update orders" on orders;
+drop policy if exists "Admin manage orders" on orders;
 create policy "Admin manage orders" on orders for all using (is_admin()) with check (is_admin());
 
 drop policy if exists "Public create order items" on order_items;
 drop policy if exists "Public read order items" on order_items;
 drop policy if exists "Admin read order items" on order_items;
+drop policy if exists "Admin manage order items" on order_items;
 create policy "Admin manage order items" on order_items for all using (is_admin()) with check (is_admin());
 
 drop policy if exists "Public create stock movements" on stock_movements;
@@ -247,6 +249,8 @@ drop policy if exists "Service role manage rate limits" on rate_limits;
 create policy "Service role manage rate limits" on rate_limits for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 drop policy if exists "Admin upload product images" on storage.objects;
+drop policy if exists "Admin update product images" on storage.objects;
+drop policy if exists "Admin delete product images" on storage.objects;
 drop policy if exists "Public read product images" on storage.objects;
 create policy "Admin upload product images" on storage.objects for insert with check (bucket_id = 'product-images' and is_admin());
 create policy "Admin update product images" on storage.objects for update using (bucket_id = 'product-images' and is_admin()) with check (bucket_id = 'product-images' and is_admin());
