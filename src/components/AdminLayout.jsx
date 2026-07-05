@@ -5,8 +5,12 @@ export default function AdminLayout({ children }) {
   const navigate = useNavigate()
 
   async function logout() {
-    await signOutAdmin()
-    navigate('/')
+    navigate('/', { replace: true })
+    try {
+      await signOutAdmin()
+    } catch (error) {
+      console.error('Gagal logout admin:', error)
+    }
   }
 
   return (
