@@ -1,73 +1,26 @@
 import { supabase } from './supabaseClient.js'
-import { generateOrderCode } from '../utils/generateOrderCode.js'
 
 const ORDER_SELECT = '*, order_items(*)'
 
 export async function createOrder({ buyerName, buyerPhone, note, items }) {
   if (!items.length) throw new Error('Keranjang masih kosong.')
+  const response = await fetch('/.netlify/functions/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      buyerName,
+      buyerPhone,
+      note,
+      items: items.map((item) => ({ product_id: item.id, quantity: item.quantity })),
+    }),
+  })
 
-  const productIds = items.map((item) => item.id)
-  const { data: products, error: productError } = await supabase.from('products').select('*').in('id', productIds)
-  if (productError) throw productError
-
-  const productMap = new Map(products.map((product) => [product.id, product]))
-  for (const item of items) {
-    const product = productMap.get(item.id)
-    if (!product || !product.is_available || !product.is_active) throw new Error(`${item.name} tidak tersedia.`)
-    if (item.quantity > product.stock) throw new Error(`Stok ${product.name} hanya ${product.stock}.`)
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload.error || 'Pesanan gagal dibuat.')
   }
 
-  const totalPrice = items.reduce((total, item) => total + item.price * item.quantity, 0)
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      order_code: generateOrderCode(),
-      buyer_name: buyerName,
-      buyer_phone: buyerPhone,
-      note: note || null,
-      total_price: totalPrice,
-      payment_method: 'Cash',
-      payment_status: 'Belum Dibayar',
-      status: 'Pesanan Masuk',
-    })
-    .select()
-    .single()
-  if (orderError) throw orderError
-
-  const orderItems = items.map((item) => ({
-    order_id: order.id,
-    product_id: item.id,
-    product_name: item.name,
-    product_price: item.price,
-    quantity: item.quantity,
-    subtotal: item.price * item.quantity,
-  }))
-
-  const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
-  if (itemsError) throw itemsError
-
-  for (const item of items) {
-    const product = productMap.get(item.id)
-    const stockAfter = product.stock - item.quantity
-    const { error: updateError } = await supabase
-      .from('products')
-      .update({ stock: stockAfter, updated_at: new Date().toISOString() })
-      .eq('id', item.id)
-    if (updateError) throw updateError
-
-    const { error: movementError } = await supabase.from('stock_movements').insert({
-      product_id: item.id,
-      movement_type: 'ORDER_CREATED',
-      quantity: -item.quantity,
-      stock_before: product.stock,
-      stock_after: stockAfter,
-      reference_order_id: order.id,
-      note: `Pesanan ${order.order_code}`,
-    })
-    if (movementError) throw movementError
-  }
-
-  return order
+  return payload
 }
 
 export async function getOrders() {
@@ -84,6 +37,16 @@ export async function getOrderById(id) {
 
 export async function getOrderByCode(orderCode) {
   const { data, error } = await supabase.from('orders').select(ORDER_SELECT).eq('order_code', orderCode).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function getOrderByLookup(orderCode, lookupToken) {
+  if (!lookupToken) return null
+  const { data, error } = await supabase.rpc('get_order_by_lookup', {
+    p_order_code: orderCode,
+    p_lookup_token: lookupToken,
+  })
   if (error) throw error
   return data
 }

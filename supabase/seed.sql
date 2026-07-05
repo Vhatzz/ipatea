@@ -1,3 +1,7 @@
+insert into public.admin_profiles (id, full_name, role)
+values ('3161223b-6884-4a18-a5f4-88e71db5793c', 'Admin IPATEA', 'admin')
+on conflict (id) do update set full_name = excluded.full_name, role = excluded.role;
+
 insert into products (id, name, price, category, description, image_url, image_path, stock, is_available, is_active)
 values
   ('11111111-1111-4111-8111-111111111111', 'Original Tea', 8000, 'Classic Tea', 'Teh hitam segar dengan rasa original yang ringan.', '/placeholder-product.svg', null, 35, true, true),
@@ -17,10 +21,10 @@ on conflict (id) do update set
   is_active = excluded.is_active,
   updated_at = now();
 
-insert into orders (id, order_code, buyer_name, buyer_phone, note, total_price, payment_method, payment_status, amount_paid, change_amount, status)
+insert into orders (id, order_code, buyer_name, buyer_phone, note, total_price, payment_method, payment_status, amount_paid, change_amount, status, lookup_token_hash)
 values
-  ('77777777-7777-4777-8777-777777777777', 'IPATEA-DEMO-0001', 'Rina Demo', '081234567890', 'Kurangi es untuk Milk Tea.', 32000, 'Cash', 'Sudah Dibayar', 35000, 3000, 'Selesai'),
-  ('88888888-8888-4888-8888-888888888888', 'IPATEA-DEMO-0002', 'Budi Demo', '089876543210', 'Ambil jam 4 sore.', 25000, 'Cash', 'Belum Dibayar', 0, 0, 'Pesanan Masuk')
+  ('77777777-7777-4777-8777-777777777777', 'IPATEA-DEMO-0001', 'Rina Demo', '081234567890', 'Kurangi es untuk Milk Tea.', 32000, 'Cash', 'Sudah Dibayar', 35000, 3000, 'Selesai', hash_lookup_token('demo-token-0001')),
+  ('88888888-8888-4888-8888-888888888888', 'IPATEA-DEMO-0002', 'Budi Demo', '089876543210', 'Ambil jam 4 sore.', 25000, 'Cash', 'Belum Dibayar', 0, 0, 'Pesanan Masuk', hash_lookup_token('demo-token-0002'))
 on conflict (id) do update set
   buyer_name = excluded.buyer_name,
   buyer_phone = excluded.buyer_phone,
@@ -31,6 +35,7 @@ on conflict (id) do update set
   amount_paid = excluded.amount_paid,
   change_amount = excluded.change_amount,
   status = excluded.status,
+  lookup_token_hash = excluded.lookup_token_hash,
   updated_at = now();
 
 delete from order_items where order_id in ('77777777-7777-4777-8777-777777777777', '88888888-8888-4888-8888-888888888888');

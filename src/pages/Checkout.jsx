@@ -16,7 +16,7 @@ export default function Checkout() {
     try {
       const order = await createOrder({ ...form, items: cart })
       setCart([])
-      navigate(`/order-success/${order.order_code}`)
+      navigate(`/order-success/${order.order_code}?token=${encodeURIComponent(order.lookup_token)}`)
     } catch (err) {
       setError(err.message)
     } finally {
