@@ -6,6 +6,7 @@ Website UMKM / mini POS minuman teh berbasis React + Vite dan Supabase sesuai `P
 - Jalankan `npm install`.
 - Copy `.env.example` ke `.env`, lalu isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` dari Supabase.
 - Jalankan SQL di `supabase/schema.sql` pada Supabase SQL Editor.
+- Opsional: jalankan `supabase/seed.sql` setelah schema untuk data dummy produk, pesanan, dan stok.
 - Buat admin melalui Supabase Auth, lalu login lewat `/admin/login`.
 
 ## Commands

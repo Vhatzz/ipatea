@@ -6,7 +6,7 @@ export default function AdminLayout({ children }) {
 
   async function logout() {
     await signOutAdmin()
-    navigate('/admin/login')
+    navigate('/')
   }
 
   return (
