@@ -1,14 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
 import { getActiveProducts } from '../services/productService.js'
+import { useCart } from '../utils/cartState.js'
 
 export default function Home() {
   const [featured, setFeatured] = useState([])
+  const [, setCart] = useCart()
+  const navigate = useNavigate()
 
   useEffect(() => {
     getActiveProducts().then((data) => setFeatured(data.slice(0, 3))).catch(console.error)
   }, [])
+
+  function addFeaturedProduct(product) {
+    setCart((current) => {
+      const existing = current.find((item) => item.id === product.id)
+      if (existing) {
+        if (existing.quantity >= product.stock) return current
+        return current.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1, stock: product.stock } : item)
+      }
+      return [...current, { ...product, quantity: 1 }]
+    })
+    navigate('/checkout')
+  }
 
   return (
     <main>
@@ -34,7 +49,7 @@ export default function Home() {
           <h2>Menu segar hari ini</h2>
         </div>
         <div className="product-grid">
-          {featured.map((product) => <ProductCard key={product.id} product={product} onAdd={() => {}} />)}
+          {featured.map((product) => <ProductCard key={product.id} product={product} onAdd={addFeaturedProduct} />)}
           {!featured.length && <p className="muted">Produk akan tampil setelah admin menambahkan menu di Supabase.</p>}
         </div>
       </section>

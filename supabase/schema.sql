@@ -98,7 +98,7 @@ returns text
 language sql
 immutable
 as $$
-  select encode(digest(token, 'sha256'), 'hex');
+  select encode(extensions.digest(token, 'sha256'), 'hex');
 $$;
 
 create or replace function public.create_order_atomic(
@@ -116,7 +116,7 @@ as $$
 declare
   v_order_id uuid := gen_random_uuid();
   v_order_code text := 'IPATEA-' || to_char(now(), 'YYMMDD') || '-' || lpad(floor(random() * 10000)::text, 4, '0');
-  v_lookup_token text := encode(gen_random_bytes(24), 'hex');
+  v_lookup_token text := encode(extensions.gen_random_bytes(24), 'hex');
   v_total integer := 0;
   v_item jsonb;
   v_product products%rowtype;
